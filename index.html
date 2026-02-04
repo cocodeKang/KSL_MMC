@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>수어 찾기 사이트</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: "Noto Sans KR", system-ui, -apple-system, sans-serif;
+      background: #111827;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      padding: 0.75rem 1.25rem;
+      background: #020617;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #1f2937;
+    }
+    header h1 {
+      font-size: 1rem;
+      margin: 0;
+    }
+    header .meta {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    .player-area {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      gap: 1rem;
+      align-items: stretch;
+    }
+    @media (max-width: 900px) {
+      .player-area {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+    .video-card {
+      background: #020617;
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .btn.on {
+      background: #16a34a !important;
+      border-color: #22c55e !important;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 0.75rem;
+      background: #000;
+      max-height: 100vh;
+      display: block;
+    }
+
+    .video-wrapper:fullscreen {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .video-wrapper:fullscreen video {
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      object-fit: contain;
+    }
+
+    /* 팝업 오버레이 */
+    .example-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      color: #000000;
+      text-align: center;
+      padding: 2rem;
+      z-index: 10;
+      box-sizing: border-box;
+    }
+    .example-overlay.show {
+      display: flex;
+    }
+    .example-text {
+      font-size: 2.2rem;
+      line-height: 1.4;
+      word-break: keep-all;
+    }
+
+    .controls-top,
+    .controls-bottom {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+    .btn {
+      border: 1px solid #374151;
+      background: #111827;
+      color: #e5e7eb;
+      border-radius: 999px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: background 0.15s, border-color 0.15s, transform 0.08s;
+      user-select: none;
+    }
+    .btn:hover {
+      background: #1f2937;
+      border-color: #4b5563;
+      transform: translateY(-1px);
+    }
+    .btn:active {
+      transform: translateY(0);
+      background: #030712;
+    }
+    .btn-primary {
+      background: #2563eb;
+      border-color: #3b82f6;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+      border-color: #60a5fa;
+    }
+    .chip {
+      border-radius: 999px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.75rem;
+      background: #0b1120;
+      border: 1px solid #1f2937;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .chip-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 999px;
+      background: #4b5563;
+    }
+    .chip-dot.on {
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.15);
+    }
+    .info-card {
+      background: #020617;
+      border-radius: 0.75rem;
+      padding: 0.75rem 0.9rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+    }
+    .label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #9ca3af;
+    }
+    .answer-box {
+      background: #020617;
+      border-radius: 0.6rem;
+      border: 1px dashed #374151;
+      padding: 0.6rem 0.7rem;
+      margin-top: 0.3rem;
+    }
+    .answer-line {
+      margin-top: 0.3rem;
+    }
+    .answer-line strong {
+      color: #e5e7eb;
+    }
+    .hidden {
+      display: none;
+    }
+    .kbd-hint {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem 0.6rem;
+    }
+    .kbd {
+      border-radius: 0.35rem;
+      border: 1px solid #4b5563;
+      padding: 0.05rem 0.3rem;
+      font-size: 0.7rem;
+      background: #020617;
+      color: #e5e7eb;
+    }
+    .list-card {
+      margin-top: 0.5rem;
+      background: #020617;
+      border-radius: 0.6rem;
+      border: 1px solid #111827;
+      max-height: 220px;
+      overflow: auto;
+    }
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #020617;
+      cursor: pointer;
+    }
+    .list-item:last-child {
+      border-bottom: none;
+    }
+    .list-item.active {
+      background: #1f2937;
+    }
+    .list-item span.idx {
+      opacity: 0.6;
+      margin-right: 0.3rem;
+    }
+    footer {
+      padding: 0.5rem 1rem;
+      font-size: 0.7rem;
+      color: #9ca3af;
+      border-top: 1px solid #1f2937;
+      background: #020617;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    /* ===== 검색(페이지 찾기) 오버레이 ===== */
+.search-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  box-sizing: border-box;
+  padding: 1rem;
+}
+
+.search-overlay.show {
+  display: flex;
+}
+
+.search-box {
+  background: #020617;
+  border-radius: 0.75rem;
+  padding: 1rem 1.2rem;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  border: 1px solid #1f2937;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.search-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  border: 1px solid #4b5563;
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 0.9rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 1px #60a5fa40;
+}
+
+.search-hint {
+  font-size: 0.78rem;
+  opacity: 0.75;
+}
+
+.search-result-list {
+  max-height: 220px;
+  overflow: auto;
+  border-radius: 0.5rem;
+  border: 1px solid #111827;
+  background: #020617;
+}
+
+.search-result-item {
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid #020617;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background: #1f2937;
+}
+
+.search-result-item .sr-headword {
+  font-weight: 600;
+}
+
+.search-result-item .sr-meta {
+  opacity: 0.7;
+  font-size: 0.78rem;
+  margin-left: 0.25rem;
+}
+
+  </style>
+</head>
+<body>
+ <header>
+  <h1>수어 단어 학습 · 테스트</h1>
+  <div class="meta">
+    v2.1 · 단어/수형문 팝업
+    <button class="btn" id="searchOpenBtn" style="margin-left:0.5rem; padding-inline:0.6rem; font-size:0.75rem;">
+      검색(F2)
+    </button>
+  </div>
+</header>
+
+
+  <main>
+    <div class="player-area">
+      <!-- 왼쪽: 비디오 -->
+      <section class="video-card">
+        <div class="controls-top">
+          <div>
+            <span class="label">현재 영상</span><br />
+            <strong id="clipTitle">–</strong>
+            <span id="clipMeta" style="font-size:0.8rem; opacity:0.75;"></span>
+          </div>
+          <div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap;">
+            <button class="btn" id="prevBtn">← 이전(Left)</button>
+            <button class="btn btn-primary" id="nextBtn">다음(Right) →</button>
+            <button class="btn" id="togglePlayBtn">▶ / ⏸</button>
+            <button class="btn" id="autoNextToggle">자동재생: OFF</button>
+          </div>
+        </div>
+
+        <!-- 비디오 + 팝업 -->
+        <div class="video-wrapper" id="videoWrapper">
+          <video id="video" controls playsinline preload="metadata"></video>
+          <div class="example-overlay" id="exampleOverlay">
+            <div class="example-text" id="exampleText">단어/수형문이 여기에 표시됩니다.</div>
+          </div>
+        </div>
+
+        <div class="controls-bottom">
+          <div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap;">
+            <button class="btn" id="slowerBtn">느리게(↓)</button>
+            <button class="btn" id="fasterBtn">빠르게(↑)</button>
+            <button class="btn" id="backwardBtn">⏪ 0.5초([)</button>
+            <button class="btn" id="forwardBtn">⏩ 0.5초(])</button>
+            <button class="btn" id="fullscreenBtn">전체화면(F)</button>
+          </div>
+          <div style="display:flex; gap:0.4rem; align-items:center;">
+            <button class="btn" id="randomBtn">랜덤(R)</button>
+            <span class="chip">
+              <span id="randomDot" class="chip-dot"></span>
+              <span id="randomText">순차 재생</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 오른쪽: 정답 / 목록 / 단축키 / 학습모드 -->
+      <section class="info-card">
+        <div>
+          <div class="label">정답 확인</div>
+          <button class="btn btn-primary" id="toggleAnswerBtn">정답 보기 / 숨기기 (Enter)</button>
+          <div class="answer-box hidden" id="answerBox">
+            <div class="answer-line">
+              <strong>표제어:</strong> <span id="answerHeadword">–</span>
+            </div>
+            <div class="answer-line">
+              <strong>용례:</strong>
+              <div id="answerSentence" style="margin-top:0.2rem;"></div>
+            </div>
+            <div class="answer-line">
+              <strong>수형문:</strong>
+              <div id="answerHandshape" style="margin-top:0.2rem;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="label">목록</div>
+          <div class="list-card" id="listContainer">
+            <!-- JS로 목록 생성 -->
+          </div>
+        </div>
+
+        <div>
+          <div class="label">학습 모드</div>
+          <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.3rem;">
+            <button class="btn" id="wordPopupBtn">단어 익히기 (E)</button>
+            <button class="btn" id="formPopupBtn">수형문 익히기 (H)</button>
+            <button class="btn" id="sentencePopupBtn">문장 익히기 (S)</button>
+            <button class="btn" id="hidePopupBtn">팝업 닫기</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="label">단축키 안내</div>
+          <div class="kbd-hint">
+            <span><span class="kbd">Space</span> 재생/일시정지</span>
+            <span><span class="kbd">← / →</span> 이전 / 다음</span>
+            <span><span class="kbd">↑ / ↓</span> 속도 조절</span>
+            <span><span class="kbd">[ / ]</span> -0.5초 / +0.5초</span>
+            <span><span class="kbd">F</span> 전체화면 (Ctrl+F는 페이지 찾기)</span>
+            <span><span class="kbd">R</span> 랜덤 토글 + 순서 섞기</span>
+            <span><span class="kbd">0~9</span> 해당 % 위치로 점프</span>
+            <span><span class="kbd">Enter</span> 정답 보기/숨기기</span>
+            <span><span class="kbd">E</span> 단어 팝업</span>
+            <span><span class="kbd">, / .</span> 이전 / 다음 프레임</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div>테스트 데이터: 과일 단어 몇 개</div>
+    <div>KSL 사전 동영상 URL 또는 videos 폴더 영상을 연결해서 사용하세요.</div>
+  </footer>
+  <!-- ===== 페이지 찾기 / 검색 오버레이 ===== -->
+  <div class="search-overlay" id="searchOverlay">
+    <div class="search-box">
+      <div class="search-box-header">
+        <div class="search-title">페이지 찾기 / 단어 검색</div>
+        <button class="btn" id="searchCloseBtn" style="font-size:0.75rem; padding:0.2rem 0.6rem;">
+          닫기(Esc)
+        </button>
+      </div>
+      <input
+        type="text"
+        id="searchInput"
+        class="search-input"
+        placeholder="표제어 / 문장 일부 / 수형문으로 검색"
+      />
+      <div class="search-hint">
+        Enter: 첫 결과로 이동 · ↑/↓: 결과 선택 · Esc: 닫기 · F2 또는 Ctrl+K: 열기
+      </div>
+      <div class="search-result-list" id="searchResults"></div>
+    </div>
+  </div>
+
+<script>
+const VIDEO_BASE_PATH = ""; // 외부 링크이므로 비워둠
+
+const clipsOriginal = [
+  {
+    id: 1,
+    headword: "전공",
+    sentence: "다들 전공이 어떻게 돼?",
+    src: "https://drive.google.com/file/d/1pBTrfzV0PUPvYPRbcuYW1V0hLweQiE-t/preview"
+  }
+
+    ];
+
+    let clipsCurrent = [...clipsOriginal];
+    let currentIndex = 0;
+    let isRandom = false;
+
+    // 팝업 모드: "word" | "handshape" | "sentence"
+    let overlayMode = "word";
+
+    // ===== 상태 저장 / 복원 함수 =====
+    function saveState() {
+      try {
+        const data = {
+          isRandom,
+          currentIndex,
+          order: clipsCurrent.map(c => c.id),
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error("saveState error", e);
+      }
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        clipsCurrent = [...clipsOriginal];
+        currentIndex = 0;
+        isRandom = false;
+        return;
+      }
+
+      try {
+        const data = JSON.parse(raw);
+
+        isRandom = !!data.isRandom;
+
+        if (Array.isArray(data.order) && data.order.length > 0) {
+          const idToClip = new Map(clipsOriginal.map(c => [c.id, c]));
+          const reordered = data.order
+            .map(id => idToClip.get(id))
+            .filter(Boolean);
+
+          if (reordered.length === clipsOriginal.length) {
+            clipsCurrent = reordered;
+          } else {
+            clipsCurrent = [...clipsOriginal];
+          }
+        } else {
+          clipsCurrent = [...clipsOriginal];
+        }
+
+        if (
+          typeof data.currentIndex === "number" &&
+          data.currentIndex >= 0 &&
+          data.currentIndex < clipsCurrent.length
+        ) {
+          currentIndex = data.currentIndex;
+        } else {
+          currentIndex = 0;
+        }
+      } catch (e) {
+        console.error("loadState error", e);
+        clipsCurrent = [...clipsOriginal];
+        currentIndex = 0;
+        isRandom = false;
+      }
+    }
+
+    // ===== 2. DOM 요소 =====
+    const videoEl = document.getElementById("video");
+    const videoWrapperEl = document.getElementById("videoWrapper");
+    const clipTitleEl = document.getElementById("clipTitle");
+    const clipMetaEl = document.getElementById("clipMeta");
+    const answerBoxEl = document.getElementById("answerBox");
+    const answerHeadwordEl = document.getElementById("answerHeadword");
+    const answerSentenceEl = document.getElementById("answerSentence");
+    const answerHandshapeEl = document.getElementById("answerHandshape");
+    const listContainerEl = document.getElementById("listContainer");
+
+    const randomDotEl = document.getElementById("randomDot");
+    const randomTextEl = document.getElementById("randomText");
+
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const togglePlayBtn = document.getElementById("togglePlayBtn");
+    const slowerBtn = document.getElementById("slowerBtn");
+    const fasterBtn = document.getElementById("fasterBtn");
+    const backwardBtn = document.getElementById("backwardBtn");
+    const forwardBtn = document.getElementById("forwardBtn");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    const randomBtn = document.getElementById("randomBtn");
+    const toggleAnswerBtn = document.getElementById("toggleAnswerBtn");
+
+    const exampleOverlayEl = document.getElementById("exampleOverlay");
+    const exampleTextEl = document.getElementById("exampleText");
+
+    const wordPopupBtn = document.getElementById("wordPopupBtn");
+    const formPopupBtn = document.getElementById("formPopupBtn");
+    const sentencePopupBtn = document.getElementById("sentencePopupBtn"); // ← 추가
+    const hidePopupBtn = document.getElementById("hidePopupBtn");
+    const autoNextBtn = document.getElementById("autoNextToggle");
+    // ✅ 검색 팝업 관련 요소
+    const searchOverlayEl = document.getElementById("searchOverlay");
+    const searchInputEl = document.getElementById("searchInput");
+    const searchResultsEl = document.getElementById("searchResults");
+    const searchOpenBtn = document.getElementById("searchOpenBtn");
+    const searchCloseBtn = document.getElementById("searchCloseBtn");
+// ✅ 팝업(오버레이) 떠있을 때 화면(비디오 영역) 클릭/터치하면 닫기
+function closeOverlayIfOpen() {
+  if (exampleOverlayEl.classList.contains("show")) {
+    hideOverlay();
+    return true;
+  }
+  return false;
+}
+
+// 오버레이 자체를 눌러도 닫힘 (버블링 막아서 뒤 이벤트 중복 방지)
+exampleOverlayEl.addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  closeOverlayIfOpen();
+});
+
+exampleOverlayEl.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  closeOverlayIfOpen();
+}, { passive: false });
+
+// 비디오 영역(검은 배경 포함) 눌러도 닫힘
+videoWrapperEl.addEventListener("click", () => {
+  closeOverlayIfOpen();
+});
+
+videoWrapperEl.addEventListener("touchend", () => {
+  closeOverlayIfOpen();
+}, { passive: true });
+
+
+    // ===== 3. 도우미 함수들 =====
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function getClipVideoUrl(clip) {
+      if (clip.src) return clip.src;
+      if (clip.file) return VIDEO_BASE_PATH + clip.file;
+      return "";
+    }
+
+    function loadClip(index, { autoplay = false } = {}) {
+      if (index < 0 || index >= clipsCurrent.length) return;
+      currentIndex = index;
+      const clip = clipsCurrent[currentIndex];
+
+      const url = getClipVideoUrl(clip);
+      if (url) videoEl.src = url;
+
+      if (autoplay) {
+        videoEl.play().catch(() => {});
+      }
+
+      clipTitleEl.textContent = `${clip.headword}`;
+      const pureSentence = (clip.sentence || "").replace(/^\d+\)\s*/, "");
+
+      const fileLabel = clip.file
+        ? clip.file
+        : (clip.src ? clip.src.split("/").pop() : "");
+
+      clipMetaEl.textContent = pureSentence
+        ? ` · ${pureSentence} (파일: ${fileLabel})`
+        : fileLabel ? ` (파일: ${fileLabel})` : "";
+
+      answerHeadwordEl.textContent = clip.headword || "";
+      answerSentenceEl.textContent = pureSentence || "";
+      answerHandshapeEl.textContent = clip.handshape || "";
+
+      // 팝업에 기본으로 단어 세팅 (모드에 따라 다시 바뀜)
+      updateOverlayText();
+
+      updateListActive();
+      saveState();
+    }
+
+    function updateListActive() {
+      const items = listContainerEl.querySelectorAll(".list-item");
+      items.forEach((item, idx) => {
+        if (idx === currentIndex) {
+          item.classList.add("active");
+        } else {
+          item.classList.remove("active");
+        }
+      });
+    }
+
+    function toggleAnswer() {
+      answerBoxEl.classList.toggle("hidden");
+    }
+
+    function updateRandomUI() {
+      if (isRandom) {
+        randomDotEl.classList.add("on");
+        randomTextEl.textContent = "랜덤 재생";
+      } else {
+        randomDotEl.classList.remove("on");
+        randomTextEl.textContent = "순차 재생";
+      }
+    }
+
+    function toggleRandomMode() {
+      isRandom = !isRandom;
+
+      if (isRandom) {
+        clipsCurrent = shuffleArray(clipsOriginal);
+        currentIndex = 0;
+      } else {
+        clipsCurrent = [...clipsOriginal];
+        currentIndex = 0;
+      }
+
+      updateRandomUI();
+      buildList();
+      loadClip(currentIndex, { autoplay: false });
+      saveState();
+    }
+
+   function shouldAutoplayWhenSkip() {
+  // ✅ 3번 모드에서만 “넘기면 자동재생”
+  return autoPlayMode === 3;
+}
+
+function nextClip() {
+  const nextIndex = (currentIndex + 1) % clipsCurrent.length;
+  loadClip(nextIndex, { autoplay: shouldAutoplayWhenSkip() });
+}
+
+function prevClip() {
+  const prevIndex = (currentIndex - 1 + clipsCurrent.length) % clipsCurrent.length;
+  loadClip(prevIndex, { autoplay: shouldAutoplayWhenSkip() });
+}
+
+
+    function changeSpeed(delta) {
+      let newRate = videoEl.playbackRate + delta;
+      if (newRate < 0.25) newRate = 0.25;
+      if (newRate > 3) newRate = 3;
+      videoEl.playbackRate = newRate;
+    }
+
+    function seekRelative(seconds) {
+      videoEl.currentTime = Math.max(0, videoEl.currentTime + seconds);
+    }
+
+    function togglePlay() {
+      if (videoEl.paused) {
+        videoEl.play().catch(() => {});
+      } else {
+        videoEl.pause();
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        videoWrapperEl.requestFullscreen?.();
+      } else {
+        document.exitFullscreen?.();
+      }
+    }
+
+    function seekPercent(percent) {
+      if (!videoEl.duration || isNaN(videoEl.duration)) return;
+      videoEl.currentTime = videoEl.duration * percent;
+    }
+
+    // ===== 팝업 관련 =====
+    function updateOverlayText() {
+      const clip = clipsCurrent[currentIndex];
+      let text = "";
+      const pureSentence = (clip.sentence || "").replace(/^\d+\)\s*/, "");
+    
+      if (overlayMode === "word") {
+        text = clip.headword || "";
+      } else if (overlayMode === "handshape") {
+        text = clip.handshape || "";
+      } else if (overlayMode === "sentence") {
+        text = pureSentence;
+      } else {
+        text = pureSentence;
+      }
+    
+      exampleTextEl.textContent = text || "내용이 없습니다.";
+    }
+
+
+    function showOverlay(mode) {
+      if (mode) overlayMode = mode;
+      updateOverlayText();
+      exampleOverlayEl.classList.add("show");
+    }
+
+    function hideOverlay() {
+      exampleOverlayEl.classList.remove("show");
+    }
+
+    function toggleOverlay(mode) {
+      if (exampleOverlayEl.classList.contains("show") && !mode) {
+        hideOverlay();
+      } else {
+        showOverlay(mode || overlayMode);
+      }
+    }
+
+    // ===== 4. 목록 생성 =====
+    function buildList() {
+      listContainerEl.innerHTML = "";
+      clipsCurrent.forEach((clip, idx) => {
+        const div = document.createElement("div");
+        div.className = "list-item";
+        const pureSentence = (clip.sentence || "").replace(/^\d+\)\s*/, "");
+        const fileLabel = clip.file
+          ? clip.file
+          : (clip.src ? clip.src.split("/").pop() : "");
+        div.innerHTML = `
+          <div>
+            <span class="idx">${idx + 1}.</span>
+            <strong>${clip.headword || ""}</strong>
+            <span style="opacity:0.7;">${pureSentence}</span>
+          </div>
+          <div style="opacity:0.6; font-size:0.75rem;">${fileLabel}</div>
+        `;
+       div.addEventListener("click", () => {
+  loadClip(idx, { autoplay: shouldAutoplayWhenSkip() });
+});
+
+        listContainerEl.appendChild(div);
+      });
+      updateListActive();
+    }
+
+    // ===== 5. 이벤트 연결 =====
+    prevBtn.addEventListener("click", prevClip);
+    nextBtn.addEventListener("click", nextClip);
+    togglePlayBtn.addEventListener("click", togglePlay);
+    slowerBtn.addEventListener("click", () => changeSpeed(-0.25));
+    fasterBtn.addEventListener("click", () => changeSpeed(0.25));
+    backwardBtn.addEventListener("click", () => seekRelative(-0.5));
+    forwardBtn.addEventListener("click", () => seekRelative(0.5));
+    fullscreenBtn.addEventListener("click", toggleFullscreen);
+    randomBtn.addEventListener("click", toggleRandomMode);
+    toggleAnswerBtn.addEventListener("click", toggleAnswer);
+
+    // 학습 모드 버튼
+    wordPopupBtn.addEventListener("click", () => {
+      showOverlay("word");
+    });
+    formPopupBtn.addEventListener("click", () => {
+      showOverlay("handshape");
+    });
+    sentencePopupBtn.addEventListener("click", () => {
+      showOverlay("sentence");
+    });
+    hidePopupBtn.addEventListener("click", hideOverlay);
+ // ✅ 검색 팝업 버튼/입력 이벤트
+    searchOpenBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openSearchOverlay();
+    });
+
+    searchCloseBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeSearchOverlay();
+    });
+
+    searchInputEl.addEventListener("input", (e) => {
+      updateSearchResults(e.target.value);
+    });
+
+    searchOverlayEl.addEventListener("click", (e) => {
+      // 바깥 검은 영역 클릭 시 닫기
+      if (e.target === searchOverlayEl) {
+        closeSearchOverlay();
+      }
+    });
+
+    searchInputEl.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        moveSearchSelection(1);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        moveSearchSelection(-1);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        goToSelectedSearchResult();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeSearchOverlay();
+      }
+    });
+  // ===== 자동재생 기능 (3모드) =====
+// 0: OFF(끝나면 멈춤)
+// 1: ON(끝나면 다음 영상 자동 재생)
+// 2: LOOP(끝나면 같은 영상 처음부터 반복 재생)
+    
+let autoPlayMode = 0;
+
+function updateAutoPlayUI() {
+  if (autoPlayMode === 0) {
+    autoNextBtn.textContent = "자동재생: OFF";
+    autoNextBtn.classList.remove("on");
+  } else if (autoPlayMode === 1) {
+    autoNextBtn.textContent = "자동재생: ON";
+    autoNextBtn.classList.add("on");
+  } else if (autoPlayMode === 2) {
+    autoNextBtn.textContent = "자동재생: 반복";
+    autoNextBtn.classList.add("on");
+  } else {
+    autoNextBtn.textContent = "자동재생: 넘기면 재생";
+    autoNextBtn.classList.add("on");
+  }
+}
+
+
+// 버튼 클릭할 때 0 → 1 → 2 → 0 순환
+autoNextBtn.addEventListener("click", () => {
+  autoPlayMode = (autoPlayMode + 1) % 4;
+  updateAutoPlayUI();
+});
+
+// 영상이 끝났을 때 동작
+videoEl.addEventListener("ended", () => {
+  if (autoPlayMode === 1) {
+    const nextIndex = (currentIndex + 1) % clipsCurrent.length;
+    loadClip(nextIndex, { autoplay: true });
+  } else if (autoPlayMode === 2) {
+    videoEl.currentTime = 0;
+    videoEl.play().catch(() => {});
+  } else {
+    // 0(OFF), 3(넘기면 재생): 끝나면 멈춤
+  }
+});
+
+
+
+    // ===== 키보드 단축키 =====
+       document.addEventListener("keydown", (e) => {
+  const tag = e.target.tagName.toLowerCase();
+
+  // 검색창이 떠 있고, 포커스가 input이 아니라면: 키보드 조작 가능하도록 input 쪽에서 처리
+  if (searchOverlayEl.classList.contains("show") && tag !== "input") {
+    // Esc로 닫기
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeSearchOverlay();
+      return;
+    }
+    // 위/아래/Enter도 검색 결과 제어
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      moveSearchSelection(1);
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      moveSearchSelection(-1);
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      goToSelectedSearchResult();
+      return;
+    }
+  }
+
+  if (tag === "input" || tag === "textarea") return;
+
+  // ✅ Ctrl+K 또는 Cmd+K : 검색 팝업 열기
+  if ((e.key === "k" || e.key === "K") && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    openSearchOverlay();
+    return;
+  }
+
+  // ✅ F2로도 검색 팝업 열기
+  if (e.key === "F2") {
+    e.preventDefault();
+    openSearchOverlay();
+    return;
+  }
+
+  // ★ Ctrl+F는 브라우저 '찾기'만 동작하도록: 전체화면 무시
+  if ((e.key === "f" || e.key === "F") && e.ctrlKey) {
+    return;
+  }
+
+  switch (e.key) {
+    case " ":
+      e.preventDefault();
+      togglePlay();
+      break;
+    case "ArrowRight":
+      e.preventDefault();
+      nextClip();
+      break;
+    case "ArrowLeft":
+      e.preventDefault();
+      prevClip();
+      break;
+    case "ArrowUp":
+      e.preventDefault();
+      changeSpeed(0.25);
+      break;
+    case "ArrowDown":
+      e.preventDefault();
+      changeSpeed(-0.25);
+      break;
+    case "[":
+      seekRelative(-5);
+      break;
+    case "]":
+      seekRelative(5);
+      break;
+    case "f":
+    case "F":
+      // Ctrl+F는 위에서 이미 걸러짐
+      toggleFullscreen();
+      break;
+    case "r":
+    case "R":
+      toggleRandomMode();
+      break;
+    case "Enter":
+      toggleAnswer();
+      break;
+
+    // 단어 팝업 (E)
+    case "e":
+    case "E":
+      // Ctrl+E, Ctrl+Shift+E 같은 브라우저 단축키는 건드리지 않기
+      if (e.ctrlKey || e.metaKey) return;
+      e.preventDefault();
+      if (exampleOverlayEl.classList.contains("show") && overlayMode === "word") {
+        hideOverlay();
+      } else {
+        showOverlay("word");
+      }
+      break;
+
+    // 수형문 팝업 (H)
+    case "h":
+    case "H":
+      if (e.ctrlKey || e.metaKey) return;
+      e.preventDefault();
+      if (exampleOverlayEl.classList.contains("show") && overlayMode === "handshape") {
+        hideOverlay();
+      } else {
+        showOverlay("handshape");
+      }
+      break;
+
+    // 문장 팝업 (S)
+    case "s":
+    case "S":
+      if (e.ctrlKey || e.metaKey) return;
+      e.preventDefault();
+      if (exampleOverlayEl.classList.contains("show") && overlayMode === "sentence") {
+        hideOverlay();
+      } else {
+        showOverlay("sentence");
+      }
+      break;
+
+    default:
+      if (e.key >= "0" && e.key <= "9") {
+        const num = parseInt(e.key, 10);
+        seekPercent(num === 0 ? 0 : num / 10);
+      }
+  }
+});
+
+
+    // 프레임 단위 재생 (, / .)
+    let FRAME_TIME = 1 / 30;
+
+    function stepForward() {
+      videoEl.pause();
+      videoEl.currentTime = Math.min(videoEl.duration || Infinity, videoEl.currentTime + FRAME_TIME);
+    }
+
+    function stepBackward() {
+      videoEl.pause();
+      videoEl.currentTime = Math.max(0, videoEl.currentTime - FRAME_TIME);
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === ",") {
+        e.preventDefault();
+        stepBackward();
+      }
+      if (e.key === ".") {
+        e.preventDefault();
+        stepForward();
+      }
+    });
+
+    // ===== 초기화 =====
+    function init() {
+  loadState();
+  updateRandomUI();
+  updateAutoPlayUI(); // ← 추가
+  buildList();
+  loadClip(currentIndex, { autoplay: false });
+}
+
+
+    init();
+    // ===== 모바일 스와이프 제스처 =====
+let touchStartX = 0;
+let touchStartY = 0;
+let touchMoved = false;
+
+const SWIPE_THRESHOLD = 50; // 민감도 (px) : 40~70 사이 추천
+
+function handleSwipe(dx, dy) {
+  const absX = Math.abs(dx);
+  const absY = Math.abs(dy);
+
+  // 가로 스와이프가 더 크면 좌/우
+  if (absX > absY && absX > SWIPE_THRESHOLD) {
+    if (dx < 0) {
+      // 오른쪽 -> 왼쪽 : 다음 영상
+      nextClip();
+    } else {
+      // 왼쪽 -> 오른쪽 : 이전 영상
+      prevClip();
+    }
+    return true;
+  }
+
+  // 세로 스와이프가 더 크면 상/하
+  if (absY > absX && absY > SWIPE_THRESHOLD) {
+    if (dy < 0) {
+      // 아래 -> 위 : 문장 팝업
+      showOverlay("sentence");
+    } else {
+      // 위 -> 아래 : 표제어 팝업
+      showOverlay("word");
+    }
+    return true;
+  }
+
+  return false;
+}
+
+// 스와이프 감지는 비디오 영역에서만
+videoWrapperEl.addEventListener(
+  "touchstart",
+  (e) => {
+    if (!e.touches || e.touches.length !== 1) return;
+    touchMoved = false;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  },
+  { passive: true }
+);
+
+videoWrapperEl.addEventListener(
+  "touchmove",
+  (e) => {
+    // 스크롤과 충돌 줄이기: 여기선 일단 moved만 표시
+    touchMoved = true;
+  },
+  { passive: true }
+);
+
+videoWrapperEl.addEventListener(
+  "touchend",
+  (e) => {
+    if (!touchMoved) return;
+
+    const touch = (e.changedTouches && e.changedTouches[0]) || null;
+    if (!touch) return;
+
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+
+    // 제스처가 인정되면 실행
+    handleSwipe(dx, dy);
+  },
+  { passive: true }
+);
+    // ===== 검색(페이지 찾기) 기능 =====
+    let searchSelectedIndex = -1;
+
+    function openSearchOverlay() {
+      searchOverlayEl.classList.add("show");
+      // 현재 클립의 표제어를 기본값으로
+      const cur = clipsCurrent[currentIndex];
+      const defaultText = (cur?.headword || "").trim();
+      searchInputEl.value = defaultText;
+      updateSearchResults(defaultText);
+      setTimeout(() => {
+        searchInputEl.focus();
+        searchInputEl.select();
+      }, 0);
+    }
+
+    function closeSearchOverlay() {
+      searchOverlayEl.classList.remove("show");
+      searchSelectedIndex = -1;
+    }
+
+    function updateSearchResults(query) {
+      const q = (query || "").trim().toLowerCase();
+      searchResultsEl.innerHTML = "";
+      searchSelectedIndex = -1;
+
+      if (!q) return;
+
+      const results = [];
+      clipsCurrent.forEach((clip, idx) => {
+        const head = (clip.headword || "").toLowerCase();
+        const sent = (clip.sentence || "").toLowerCase();
+        const hand = (clip.handshape || "").toLowerCase();
+
+        if (head.includes(q) || sent.includes(q) || hand.includes(q)) {
+          results.push({ clip, idx });
+        }
+      });
+
+      results.forEach((item, i) => {
+        const div = document.createElement("div");
+        div.className = "search-result-item";
+        div.dataset.index = String(item.idx);
+        div.innerHTML = `
+          <div>
+            <span class="sr-headword">${item.clip.headword || "(표제어 없음)"}</span>
+            <span class="sr-meta">
+              ${ (item.clip.sentence || "").replace(/^\d+\)\s*/, "") }
+            </span>
+          </div>
+        `;
+        div.addEventListener("click", () => {
+          loadClip(item.idx, { autoplay: false });
+          closeSearchOverlay();
+        });
+        searchResultsEl.appendChild(div);
+
+        // 첫 번째 결과 강조
+        if (i === 0) {
+          div.style.background = "#1f2937";
+          searchSelectedIndex = 0;
+        }
+      });
+    }
+
+    function moveSearchSelection(delta) {
+      const items = Array.from(
+        searchResultsEl.querySelectorAll(".search-result-item")
+      );
+      if (!items.length) return;
+
+      searchSelectedIndex += delta;
+      if (searchSelectedIndex < 0) searchSelectedIndex = items.length - 1;
+      if (searchSelectedIndex >= items.length) searchSelectedIndex = 0;
+
+      items.forEach((el, i) => {
+        el.style.background = i === searchSelectedIndex ? "#1f2937" : "transparent";
+      });
+
+      // 선택된 아이템이 스크롤 영역 안으로 오게
+      const target = items[searchSelectedIndex];
+      target.scrollIntoView({ block: "nearest" });
+    }
+
+    function goToSelectedSearchResult() {
+      const items = Array.from(
+        searchResultsEl.querySelectorAll(".search-result-item")
+      );
+      if (!items.length) return;
+
+      const targetEl =
+        items[searchSelectedIndex >= 0 ? searchSelectedIndex : 0];
+      const idx = parseInt(targetEl.dataset.index, 10);
+      if (!Number.isNaN(idx)) {
+        loadClip(idx, { autoplay: false });
+      }
+      closeSearchOverlay();
+    }
+
+  </script>
+</body>
+</html>
