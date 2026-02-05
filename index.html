@@ -1932,10 +1932,10 @@
         case " ":
         case "Spacebar":
           // 스페이스바: 현재 비디오를 다시 재생
-          e.preventDefault();
-          reloadClip();
+          frameEl.src = clipsCurrent[currentIndex].src;
           break;
 	    }
+	  	
 	  });
 	
 	  // ===== 초기화 =====
