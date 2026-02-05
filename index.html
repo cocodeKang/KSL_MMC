@@ -1,168 +1,167 @@
-	<!DOCTYPE html>
-	<html lang="ko">
-	<head>
-	<meta charset="UTF-8" />
-	<title>수어 말뭉치 학습</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	
-	<style>
-	body {
-	  margin: 0;
-	  font-family: "Noto Sans KR", system-ui, sans-serif;
-	  background: #111827;
-	  color: #e5e7eb;
-	}
-	header {
-	  padding: 0.75rem 1.25rem;
-	  background: #020617;
-	  border-bottom: 1px solid #1f2937;
-	}
-	main { padding: 1rem; }
-	
-	.player-area {
-	  display: grid;
-	  grid-template-columns: 3fr 2fr;
-	  gap: 1rem;
-	}
-	@media (max-width: 900px) {
-	  .player-area { grid-template-columns: 1fr; }
-	}
-	
-	.video-card, .info-card {
-	  background: #020617;
-	  border-radius: 0.75rem;
-	  padding: 0.75rem;
-	}
-	
-	.video-wrapper {
-	  position: relative;
-	  background: #000;
-	  border-radius: 0.75rem;
-	  overflow: hidden;
-	}
-	video {
-	  width: 100%;
-	  display: block;
-	}
-	
-	.example-overlay {
-	  position: absolute;
-	  inset: 0;
-	  display: none;
-	  align-items: center;
-	  justify-content: center;
-	  background: #fff;
-	  color: #000;
-	  font-size: 2rem;
-	  text-align: center;
-	  z-index: 5;
-	  cursor: pointer;
-	}
-	.example-overlay.show { display: flex; }
-	
-	.btn {
-	  border: 1px solid #374151;
-	  background: #111827;
-	  color: #e5e7eb;
-	  border-radius: 999px;
-	  padding: 0.3rem 0.7rem;
-	  cursor: pointer;
-	  font-size: 0.8rem;
-	  margin-right: 0.25rem;
-	}
-	.btn.on {
-	  background: #2563eb;
-	  border-color: #3b82f6;
-	}
-	
-	.list-card {
-	  max-height: 220px;
-	  overflow: auto;
-	}
-	.list-item {
-	  padding: 0.4rem;
-	  cursor: pointer;
-	}
-	.list-item.active {
-	  background: #1f2937;
-	}
-	
-	.mode-label {
-	  font-size: 0.75rem;
-	  opacity: 0.8;
-	  margin-left: 0.5rem;
-	}
-	</style>
-	</head>
-	
-	<body>
-	
-	<header>
-	  <strong>수어 말뭉치 학습</strong>
-		<button
-  class="btn"
-  title="말뭉치 사전 바로가기"
-  onclick="window.open(
-    'https://onedrive.live.com/:x:/g/personal/1CBD00C8B31C7409/IQCq_a5a5qOeRZxb4JsGbtfHAY9CrgMNuO7YSBQ8kcvcT2Y?resid=1CBD00C8B31C7409!s5aaefdaaa3e6459e9c5be09b066ed7c7',
-    '_blank'
-  )"
->
-  📘 말뭉치 사전
-</button>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>수어 말뭉치 학습</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-	</header>
-	
-	<main>
-	<div class="player-area">
-	
-	<!-- 왼쪽 -->
-	<section class="video-card">
-	
-	  <!-- 이동 -->
-	  <div>
-	    <button class="btn" id="prevBtn">←</button>
-	    <button class="btn" id="nextBtn">→</button>
-	    <button class="btn" id="fullscreenBtn">F 전체화면</button>
-	  </div>
-	
-	  <!-- 자동재생 모드 -->
-	  <div style="margin-top:0.4rem;">
-	    <button class="btn" id="playModeBtn">재생모드</button>
-	    <span class="mode-label" id="playModeText">1회</span>
-	  </div>
-	
-	  <!-- 학습 모드 -->
-	  <div style="margin-top:0.4rem;">
-	   <button class="btn on" id="videoModeBtn">영상 학습</button>
-<button class="btn" id="sentenceModeBtn">문장 학습</button>
+<style>
+body {
+  margin: 0;
+  font-family: "Noto Sans KR", system-ui, sans-serif;
+  background: #111827;
+  color: #e5e7eb;
+}
+header {
+  padding: 0.75rem 1.25rem;
+  background: #020617;
+  border-bottom: 1px solid #1f2937;
+}
+main { padding: 1rem; }
 
-	  </div>
-	
-	  <div class="video-wrapper">
-	    <video id="video" controls></video>
-	    <div class="example-overlay" id="overlay">
-	      <div id="overlayText"></div>
-	    </div>
-	  </div>
-	
-	</section>
-	
-	<!-- 오른쪽 -->
-	<section class="info-card">
-	  <strong id="clipTitle">–</strong>
-	  <div id="clipSentence"></div>
-	  <div id="clipKeywords"></div>
-	
-	  <div class="list-card" id="list"></div>
-	</section>
-	
-	</div>
-	</main>
-	
-	<script>
-	/* ===== 데이터 ===== */
-	const clips = [
-	 { id: 1, title: "교육", sentence: "다들 전공이 어떻게 돼?", keywords: "다들, 전공, 어떻", src: "https://pub-7aa4b5f930f64aceaadf2446de1fb8c7.r2.dev/VXPAKOKS240779230.mp4" },
+.player-area {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1rem;
+}
+@media (max-width: 900px) {
+  .player-area { grid-template-columns: 1fr; }
+}
+
+.video-card, .info-card {
+  background: #020617;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+.video-wrapper {
+  position: relative;
+  background: #000;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+video {
+  width: 100%;
+  display: block;
+}
+
+.example-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  color: #000;
+  font-size: 2rem;
+  text-align: center;
+  z-index: 5;
+  cursor: pointer;
+}
+.example-overlay.show { display: flex; }
+
+.btn {
+  border: 1px solid #374151;
+  background: #111827;
+  color: #e5e7eb;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-right: 0.25rem;
+}
+.btn.on {
+  background: #2563eb;
+  border-color: #3b82f6;
+}
+
+.list-card {
+  max-height: 220px;
+  overflow: auto;
+}
+.list-item {
+  padding: 0.4rem;
+  cursor: pointer;
+}
+.list-item.active {
+  background: #1f2937;
+}
+
+.mode-label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-left: 0.5rem;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <strong>수어 말뭉치 학습</strong>
+  <button
+    class="btn"
+    title="말뭉치 사전 바로가기"
+    onclick="window.open(
+      'https://onedrive.live.com/:x:/g/personal/1CBD00C8B31C7409/IQCq_a5a5qOeRZxb4JsGbtfHAY9CrgMNuO7YSBQ8kcvcT2Y?resid=1CBD00C8B31C7409!s5aaefdaaa3e6459e9c5be09b066ed7c7',
+      '_blank'
+    )"
+  >
+    📘 말뭉치 사전
+  </button>
+</header>
+
+<main>
+<div class="player-area">
+
+  <!-- 왼쪽 -->
+  <section class="video-card">
+
+    <!-- 이동 -->
+    <div>
+      <button class="btn" id="prevBtn">←</button>
+      <button class="btn" id="nextBtn">→</button>
+      <button class="btn" id="fullscreenBtn">F 전체화면</button>
+    </div>
+
+    <!-- 자동재생 모드 -->
+    <div style="margin-top:0.4rem;">
+      <button class="btn" id="playModeBtn">재생모드</button>
+      <span class="mode-label" id="playModeText">1회</span>
+    </div>
+
+    <!-- 학습 모드 -->
+    <div style="margin-top:0.4rem;">
+      <button class="btn on" id="videoModeBtn">영상 학습</button>
+      <button class="btn" id="sentenceModeBtn">문장 학습</button>
+    </div>
+
+    <div class="video-wrapper">
+      <video id="video" controls></video>
+      <div class="example-overlay" id="overlay">
+        <div id="overlayText"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- 오른쪽 -->
+  <section class="info-card">
+    <strong id="clipTitle">–</strong>
+    <div id="clipSentence"></div>
+    <div id="clipKeywords"></div>
+
+    <div class="list-card" id="list"></div>
+  </section>
+
+</div>
+</main>
+
+<script>
+/* ===== 데이터 ===== */
+// 실제 목록은 여기에 여러 개의 클립 객체를 넣으면 됩니다.
+const clips = [
+  { id: 1, title: "교육", sentence: "다들 전공이 어떻게 돼?", keywords: "다들, 전공, 어떻", src: "https://pub-7aa4b5f930f64aceaadf2446de1fb8c7.r2.dev/VXPAKOKS240779230.mp4" },
 { id: 2, title: "교육", sentence: "나는 경영학을 전공을 하고 있어.", keywords: "나는, 경영학, 전공", src: "https://pub-7aa4b5f930f64aceaadf2446de1fb8c7.r2.dev/VXPAKOKS240779240.mp4" },
 { id: 3, title: "교육", sentence: "나도 너랑 같은 경영학을 전공하고 있어.", keywords: "나도, 너랑, 같은", src: "https://pub-7aa4b5f930f64aceaadf2446de1fb8c7.r2.dev/VXPAKOKS240779250.mp4" },
 { id: 4, title: "법률", sentence: "나는 법학을 전공했고 복수 전공으론 사회복지학을 전공했어.", keywords: "나는, 법학, 전공했", src: "https://pub-7aa4b5f930f64aceaadf2446de1fb8c7.r2.dev/VXPAKOKS240779260.mp4" },
@@ -1198,20 +1197,33 @@
 { id: 1034, title: "생활", sentence: "나는 코로나 이후로 여행을 1번도 안 가 봤으니까.", keywords: "나는, 코로나, 이후로", src: "https://pub-7aa4b5f930f64aceaadf2446de1fb8c7.r2.dev/VXPAKOKS240789680.mp4" },
 { id: 1035, title: "생활", sentence: "나도 처음에 코로나 초창기에 마스크 쓰는 게 너무 싫었거든.", keywords: "나도, 처음, 코로나", src: "https://pub-7aa4b5f930f64aceaadf2446de1fb8c7.r2.dev/VXPAKOKS240789690.mp4" },
 
-	];
-	
-	let index = 0;
-	let studyMode = "video"; // video | sentence
+];
 
-	/* ===== 모드 상태 ===== */
-	const videoModeBtn = document.getElementById("videoModeBtn");
+// 현재 재생 중인 클립 인덱스
+let currentIndex = 0;
+// 현재 학습 모드(video | sentence)
+let studyMode = "video";
+
+/* ===== 버튼 및 DOM 요소 ===== */
+const videoModeBtn = document.getElementById("videoModeBtn");
 const sentenceModeBtn = document.getElementById("sentenceModeBtn");
 
+const video = document.getElementById("video");
+const overlay = document.getElementById("overlay");
+const overlayText = document.getElementById("overlayText");
+
+const playModeText = document.getElementById("playModeText");
+
+const clipTitle = document.getElementById("clipTitle");
+const clipSentence = document.getElementById("clipSentence");
+const clipKeywords = document.getElementById("clipKeywords");
+const listEl = document.getElementById("list");
+
+/* ===== 학습 모드 토글 ===== */
 videoModeBtn.onclick = () => {
   studyMode = "video";
   video.style.display = "block";
-  exampleOverlay.classList.remove("show");
-
+  overlay.classList.remove("show");
   videoModeBtn.classList.add("on");
   sentenceModeBtn.classList.remove("on");
 };
@@ -1219,127 +1231,89 @@ videoModeBtn.onclick = () => {
 sentenceModeBtn.onclick = () => {
   studyMode = "sentence";
   video.style.display = "none";
-
-  exampleText.textContent = clips[currentIndex].sentence;
-  exampleOverlay.classList.add("show");
-
+  overlayText.textContent = clips[currentIndex].sentence;
+  overlay.classList.add("show");
   sentenceModeBtn.classList.add("on");
   videoModeBtn.classList.remove("on");
 };
 
-	const playModes = ["once", "loop", "continue"];
-	let playModeIndex = 0;
-	
-	const studyModes = ["video", "sentence"];
-	let studyModeIndex = 0;
-	
-	/* ===== DOM ===== */
-	const video = document.getElementById("video");
-	const overlay = document.getElementById("overlay");
-	const overlayText = document.getElementById("overlayText");
-	
-	const playModeText = document.getElementById("playModeText");
-	const studyModeText = document.getElementById("studyModeText");
-	
-	const clipTitle = document.getElementById("clipTitle");
-	const clipSentence = document.getElementById("clipSentence");
-	const clipKeywords = document.getElementById("clipKeywords");
-	const listEl = document.getElementById("list");
-	
-	/* ===== 로드 ===== */
-	function loadClip(index) {
+/* ===== 재생 모드 ===== */
+const playModes = ["once", "loop", "continue"];
+let playModeIndex = 0;
+
+/* ===== 클립 로드 ===== */
+function loadClip(index) {
   currentIndex = index;
   const clip = clips[currentIndex];
-
   // 비디오 로드
   video.src = clip.src;
   video.load();
-
-  // 🔹 제목: undefined 대신 title
+  // 제목, 문장, 키워드 표시
   clipTitle.textContent = clip.title || "–";
-
-  // 🔹 (파일명) 대신 (키워드)
-  clipMeta.textContent = clip.keywords
-    ? ` (${clip.keywords})`
-    : "";
-
-  // 정답 영역
-  answerHeadword.textContent = clip.title || "–";
-  answerSentence.textContent = clip.sentence || "";
-  answerHandshape.textContent = clip.keywords || "";
-
-  updateListActive();
+  clipSentence.textContent = clip.sentence || "";
+  clipKeywords.textContent = clip.keywords || "";
+  updateList();
 }
 
-	
-	function updateList() {
-	  listEl.innerHTML = "";
-	  clips.forEach((c, i) => {
-	    const d = document.createElement("div");
-	    d.className = "list-item" + (i === index ? " active" : "");
-	    d.textContent = `${i+1}. ${c.title}`;
-	    d.onclick = () => loadClip(i);
-	    listEl.appendChild(d);
-	  });
-	}
-	
-	/* ===== 오버레이 ===== */
-	function showSentenceOverlay() {
-	  overlayText.textContent = clips[index].sentence;
-	  overlay.classList.add("show");
-	}
-	function hideOverlay() {
-	  overlay.classList.remove("show");
-	}
-	
-	/* 문장 클릭 → 영상 재생 */
-	overlay.addEventListener("click", () => {
-	  hideOverlay();
-	  video.play();
-	});
-	
-	/* ===== 자동재생 ===== */
-	video.addEventListener("ended", () => {
-	  const mode = playModes[playModeIndex];
-	  if (mode === "loop") {
-	    video.currentTime = 0;
-	    video.play();
-	  } else if (mode === "continue") {
-	    loadClip((index + 1) % clips.length);
-	    video.play();
-	  }
-	});
-	
-	/* ===== 버튼 ===== */
-	document.getElementById("prevBtn").onclick = () =>
-	  loadClip((index - 1 + clips.length) % clips.length);
-	
-	document.getElementById("nextBtn").onclick = () =>
-	  loadClip((index + 1) % clips.length);
-	
-	document.getElementById("fullscreenBtn").onclick = () =>
-	  video.requestFullscreen();
-	
-	/* 재생모드 순환 */
-	document.getElementById("playModeBtn").onclick = () => {
-	  playModeIndex = (playModeIndex + 1) % playModes.length;
-	  playModeText.textContent =
-	    playModes[playModeIndex] === "once" ? "1회" :
-	    playModes[playModeIndex] === "loop" ? "반복" : "계속";
-	};
-	
-	/* 학습모드 순환 */
-	document.getElementById("studyModeBtn").onclick = () => {
-	  studyModeIndex = (studyModeIndex + 1) % studyModes.length;
-	  studyModeText.textContent =
-	    studyModes[studyModeIndex] === "video" ? "영상학습" : "문장학습";
-	  loadClip(index);
-	};
-	
-	/* ===== 시작 ===== */
-	loadClip(0);
-	</script>
-	
-	</body>
-	</html>
-	
+/* ===== 리스트 업데이트 ===== */
+function updateList() {
+  listEl.innerHTML = "";
+  clips.forEach((c, i) => {
+    const d = document.createElement("div");
+    d.className = "list-item" + (i === currentIndex ? " active" : "");
+    d.textContent = `${i + 1}. ${c.title}`;
+    d.onclick = () => loadClip(i);
+    listEl.appendChild(d);
+  });
+}
+
+/* ===== 오버레이 숨김 ===== */
+function hideOverlay() {
+  overlay.classList.remove("show");
+}
+
+// 오버레이 클릭하면 비디오 재생
+overlay.addEventListener("click", () => {
+  hideOverlay();
+  video.play();
+});
+
+/* ===== 자동재생 ===== */
+video.addEventListener("ended", () => {
+  const mode = playModes[playModeIndex];
+  if (mode === "loop") {
+    video.currentTime = 0;
+    video.play();
+  } else if (mode === "continue") {
+    loadClip((currentIndex + 1) % clips.length);
+    video.play();
+  }
+});
+
+/* ===== 이동 버튼 ===== */
+document.getElementById("prevBtn").onclick = () =>
+  loadClip((currentIndex - 1 + clips.length) % clips.length);
+
+document.getElementById("nextBtn").onclick = () =>
+  loadClip((currentIndex + 1) % clips.length);
+
+document.getElementById("fullscreenBtn").onclick = () =>
+  video.requestFullscreen();
+
+/* ===== 재생 모드 버튼 ===== */
+document.getElementById("playModeBtn").onclick = () => {
+  playModeIndex = (playModeIndex + 1) % playModes.length;
+  playModeText.textContent =
+    playModes[playModeIndex] === "once"
+      ? "1회"
+      : playModes[playModeIndex] === "loop"
+      ? "반복"
+      : "계속";
+};
+
+/* ===== 초기화 ===== */
+loadClip(0);
+</script>
+
+</body>
+</html>
