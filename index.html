@@ -99,6 +99,17 @@
 	
 	<header>
 	  <strong>수어 말뭉치 학습</strong>
+		<button
+  class="btn"
+  title="말뭉치 사전 바로가기"
+  onclick="window.open(
+    'https://onedrive.live.com/:x:/g/personal/1CBD00C8B31C7409/IQCq_a5a5qOeRZxb4JsGbtfHAY9CrgMNuO7YSBQ8kcvcT2Y?resid=1CBD00C8B31C7409!s5aaefdaaa3e6459e9c5be09b066ed7c7',
+    '_blank'
+  )"
+>
+  📘 말뭉치 사전
+</button>
+
 	</header>
 	
 	<main>
@@ -122,8 +133,9 @@
 	
 	  <!-- 학습 모드 -->
 	  <div style="margin-top:0.4rem;">
-	    <button class="btn" id="studyModeBtn">학습모드</button>
-	    <span class="mode-label" id="studyModeText">영상학습</span>
+	   <button class="btn on" id="videoModeBtn">영상 학습</button>
+<button class="btn" id="sentenceModeBtn">문장 학습</button>
+
 	  </div>
 	
 	  <div class="video-wrapper">
@@ -1189,8 +1201,32 @@
 	];
 	
 	let index = 0;
-	
+	let studyMode = "video"; // video | sentence
+
 	/* ===== 모드 상태 ===== */
+	const videoModeBtn = document.getElementById("videoModeBtn");
+const sentenceModeBtn = document.getElementById("sentenceModeBtn");
+
+videoModeBtn.onclick = () => {
+  studyMode = "video";
+  video.style.display = "block";
+  exampleOverlay.classList.remove("show");
+
+  videoModeBtn.classList.add("on");
+  sentenceModeBtn.classList.remove("on");
+};
+
+sentenceModeBtn.onclick = () => {
+  studyMode = "sentence";
+  video.style.display = "none";
+
+  exampleText.textContent = clips[currentIndex].sentence;
+  exampleOverlay.classList.add("show");
+
+  sentenceModeBtn.classList.add("on");
+  videoModeBtn.classList.remove("on");
+};
+
 	const playModes = ["once", "loop", "continue"];
 	let playModeIndex = 0;
 	
@@ -1211,20 +1247,30 @@
 	const listEl = document.getElementById("list");
 	
 	/* ===== 로드 ===== */
-	function loadClip(i) {
-	  index = i;
-	  const c = clips[index];
-	  video.src = c.src;
-	  clipTitle.textContent = c.title;
-	  clipSentence.textContent = c.sentence;
-	  clipKeywords.textContent = c.keywords;
-	
-	  if (studyModes[studyModeIndex] === "sentence") {
-	    showSentenceOverlay();
-	    video.pause();
-	  }
-	  updateList();
-	}
+	function loadClip(index) {
+  currentIndex = index;
+  const clip = clips[currentIndex];
+
+  // 비디오 로드
+  video.src = clip.src;
+  video.load();
+
+  // 🔹 제목: undefined 대신 title
+  clipTitle.textContent = clip.title || "–";
+
+  // 🔹 (파일명) 대신 (키워드)
+  clipMeta.textContent = clip.keywords
+    ? ` (${clip.keywords})`
+    : "";
+
+  // 정답 영역
+  answerHeadword.textContent = clip.title || "–";
+  answerSentence.textContent = clip.sentence || "";
+  answerHandshape.textContent = clip.keywords || "";
+
+  updateListActive();
+}
+
 	
 	function updateList() {
 	  listEl.innerHTML = "";
