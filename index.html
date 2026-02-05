@@ -1614,6 +1614,9 @@
     }
 
     // ===== 2. DOM 요소 =====
+    const PRELOAD_COUNT = 3; // 미리 로드할 개수 (2~3 추천)
+    const preloadPoolEl = document.getElementById("preloadPool");
+
     const videoEl = document.getElementById("video");
     const videoWrapperEl = document.getElementById("videoWrapper");
     const clipTitleEl = document.getElementById("clipTitle");
@@ -1685,6 +1688,26 @@ videoWrapperEl.addEventListener("touchend", () => {
 
 
     // ===== 3. 도우미 함수들 =====
+    function preloadNextClips() {
+  preloadPoolEl.innerHTML = ""; // 이전 프리로드 제거
+
+  for (let i = 1; i <= PRELOAD_COUNT; i++) {
+    const idx = (currentIndex + i) % clipsCurrent.length;
+    const clip = clipsCurrent[idx];
+    const url = getClipVideoUrl(clip);
+    if (!url) continue;
+
+    const v = document.createElement("video");
+    v.src = url;
+    v.preload = "auto";
+    v.muted = true;        // 모바일 autoplay 정책 회피
+    v.playsInline = true;
+    v.style.display = "none";
+
+    preloadPoolEl.appendChild(v);
+  }
+}
+
     function shuffleArray(array) {
       const arr = [...array];
       for (let i = arr.length - 1; i > 0; i--) {
@@ -2341,7 +2364,30 @@ videoWrapperEl.addEventListener(
       }
       closeSearchOverlay();
     }
+  function loadClip(index, { autoplay = false } = {}) {
+  if (index < 0 || index >= clipsCurrent.length) return;
+  currentIndex = index;
+  const clip = clipsCurrent[currentIndex];
+
+  const url = getClipVideoUrl(clip);
+  if (url) videoEl.src = url;
+
+  if (autoplay) {
+    videoEl.play().catch(() => {});
+  }
+
+  // 기존 코드들 …
+  updateOverlayText();
+  updateListActive();
+  saveState();
+
+  // ✅ 다음 영상들 미리 로드
+  preloadNextClips();
+}
 
   </script>
+  <!-- ===== 프리로드용 hidden video ===== -->
+<div id="preloadPool" style="display:none;"></div>
+
 </body>
 </html>
