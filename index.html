@@ -1886,32 +1886,31 @@ function prevClip() {
       }
     }
 
-    // ===== 4. 목록 생성 =====
-    function buildList() {
-      listContainerEl.innerHTML = "";
-      clipsCurrent.forEach((clip, idx) => {
-        const div = document.createElement("div");
-        div.className = "list-item";
-        const pureSentence = (clip.sentence || "").replace(/^\d+\)\s*/, "");
-        const fileLabel = clip.file
-          ? clip.file
-          : (clip.src ? clip.src.split("/").pop() : "");
-        div.innerHTML = `
-          <div>
-            <span class="idx">${idx + 1}.</span>
-            <strong>${clip.headword || ""}</strong>
-            <span style="opacity:0.7;">${pureSentence}</span>
-          </div>
-          <div style="opacity:0.6; font-size:0.75rem;">${fileLabel}</div>
-        `;
-       div.addEventListener("click", () => {
-  loadClip(idx, { autoplay: shouldAutoplayWhenSkip() });
-});
+// ===== 4. 목록 생성 =====
+function buildList() {
+  listContainerEl.innerHTML = "";
+  clipsCurrent.forEach((clip, idx) => {
+    const div = document.createElement("div");
+    div.className = "list-item";
 
-        listContainerEl.appendChild(div);
-      });
-      updateListActive();
-    }
+    const pureSentence = (clip.sentence || "").replace(/^\d+\)\s*/, "");
+
+    // ✅ 번호 + 문장만
+    div.innerHTML = `
+      <div>
+        <span class="idx">${idx + 1}.</span>
+        <span style="opacity:0.9;">${pureSentence || "내용이 없습니다."}</span>
+      </div>
+    `;
+
+    div.addEventListener("click", () => {
+      loadClip(idx, { autoplay: shouldAutoplayWhenSkip() });
+    });
+
+    listContainerEl.appendChild(div);
+  });
+  updateListActive();
+}
 
     // ===== 5. 이벤트 연결 =====
     prevBtn.addEventListener("click", prevClip);
@@ -1973,23 +1972,35 @@ function prevClip() {
         closeSearchOverlay();
       }
     });
-// ===== 자동재생 기능 (4모드 + 음성읽기) =====
+// ===== 자동재생 기능 (5모드) =====
 // 0: OFF(끝나면 멈춤)
 // 1: ON(끝나면 다음 영상 자동 재생)
 // 2: LOOP(끝나면 같은 영상 처음부터 반복 재생)
 // 3: 넘기면 재생(다음/이전/목록 클릭 시 자동재생)
-// 4: 음성읽기(영상 끝 → 문장 읽기 → 3초 후 다음 영상 자동재생, 총 10개면 종료)
+// 4: 10개 자동재생(영상 끝 → 3초 후 다음, 총 10개면 종료)
 
 let autoPlayMode = 0;
 
-// 4번 모드(음성읽기) 설정
-const AUTO_READ_AFTER_DELAY_MS = 3000; // “읽고 나서” 다음 영상 넘어가기까지 3초
-const AUTO_READ_MAX_COUNT = 10;        // 총 10개면 멈춤
+// ✅ 4번 모드(10개 자동재생) 설정
+const AUTO10_AFTER_DELAY_MS = 3000;
+const AUTO10_MAX_COUNT = 10;
 
-let autoReadRunning = false;
-let autoReadCount = 0;
-let autoReadBusy = false;
-let autoReadTimer = null;
+let auto10Count = 0;
+let auto10Timer = null;
+
+function stopAuto10Mode() {
+  auto10Count = 0;
+  if (auto10Timer) clearTimeout(auto10Timer);
+  auto10Timer = null;
+}
+
+function startAuto10Mode() {
+  stopAuto10Mode();
+  // ✅ 모드 켰으면 현재 영상부터 자동재생 시작(원하면 이 줄 빼도 됨)
+  if (videoEl.paused) {
+    videoEl.play().catch(() => {});
+  }
+}
 
 function updateAutoPlayUI() {
   if (autoPlayMode === 0) {
@@ -2005,40 +2016,56 @@ function updateAutoPlayUI() {
     autoNextBtn.textContent = "자동재생: 넘기면 재생";
     autoNextBtn.classList.add("on");
   } else { // 4
-    autoNextBtn.textContent = "자동재생: 음성읽기(10)";
+    autoNextBtn.textContent = "자동재생: 10개(3초)";
     autoNextBtn.classList.add("on");
   }
 }
 
-// 4번 모드 정리/시작
-function stopAutoReadMode() {
-  autoReadRunning = false;
-  autoReadBusy = false;
-  autoReadCount = 0;
-
-  if (autoReadTimer) clearTimeout(autoReadTimer);
-  autoReadTimer = null;
-
-  // 기존 TTS 유틸 재사용(파일에 이미 있음)
-  if (typeof ttsStopAll === "function") ttsStopAll();
-}
-
-function startAutoReadMode() {
-  stopAutoReadMode();
-  autoReadRunning = true;
-  autoReadCount = 0;
-}
-
-// 버튼 클릭: 0 → 1 → 2 → 3 → 4 → 0 순환
+// 버튼 클릭: 0 → 1 → 2 → 3 → 4 → 0
 autoNextBtn.addEventListener("click", () => {
   // 모드 바꾸기 전에 4번 모드 정리
-  if (autoPlayMode === 4) stopAutoReadMode();
+  if (autoPlayMode === 4) stopAuto10Mode();
 
   autoPlayMode = (autoPlayMode + 1) % 5;
   updateAutoPlayUI();
 
-  // 4번 모드 들어오면 준비
-  if (autoPlayMode === 4) startAutoReadMode();
+  // 4번 모드 들어오면 시작
+  if (autoPlayMode === 4) startAuto10Mode();
+});
+
+// 영상이 끝났을 때 동작
+videoEl.addEventListener("ended", () => {
+  if (autoPlayMode === 1) {
+    const nextIndex = (currentIndex + 1) % clipsCurrent.length;
+    loadClip(nextIndex, { autoplay: true });
+
+  } else if (autoPlayMode === 2) {
+    videoEl.currentTime = 0;
+    videoEl.play().catch(() => {});
+
+  } else if (autoPlayMode === 4) {
+    // ✅ 10개 자동재생 모드: 끝나면 3초 대기 후 다음
+    auto10Count += 1;
+
+    // 10개면 종료 + OFF로
+    if (auto10Count >= AUTO10_MAX_COUNT) {
+      stopAuto10Mode();
+      autoPlayMode = 0;
+      updateAutoPlayUI();
+      return;
+    }
+
+    auto10Timer = setTimeout(() => {
+      // 중간에 모드가 바뀌었으면 무시
+      if (autoPlayMode !== 4) return;
+
+      const nextIndex = (currentIndex + 1) % clipsCurrent.length;
+      loadClip(nextIndex, { autoplay: true });
+    }, AUTO10_AFTER_DELAY_MS);
+
+  } else {
+    // 0(OFF), 3(넘기면 재생): 끝나면 멈춤
+  }
 });
 
 // 영상이 끝났을 때 동작
