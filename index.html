@@ -2045,7 +2045,7 @@ function startAutoReadMode() {
 
 // ✅ 한 스텝: S처럼 문장 오버레이 → TTS 읽기 → 3초 후 다음 클립(autoplay:false) → 반복
 async function runAutoReadStep() {
-  if (!autoReadRunning || autoPlayMode !== 4) return;
+  if (!autoReadRunning || autoPlayMode !== 4) startAutoReadMode();
   if (autoReadBusy) return;
   autoReadBusy = true;
 
